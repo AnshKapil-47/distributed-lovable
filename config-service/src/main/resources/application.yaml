@@ -36,8 +36,8 @@ spring:
       server:
         git:
           uri: https://github.com/AnshKapil-47/lovable-config-server
-          username: {GIT_USERNAME}
-          password: {GIT_PASSWORD}
+          username: ${GIT_USERNAME}
+          password: ${GIT_PASSWORD}
 
 eureka:
   client:
