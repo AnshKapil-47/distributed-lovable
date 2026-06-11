@@ -43,7 +43,7 @@ spec:
               memory: 384Mi
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8888
             initialDelaySeconds: 90
             periodSeconds: 15
