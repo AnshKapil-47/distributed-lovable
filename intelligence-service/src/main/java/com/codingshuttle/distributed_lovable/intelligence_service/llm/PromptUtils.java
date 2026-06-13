@@ -50,7 +50,29 @@ public class PromptUtils {
             <file path="src/App.css">...</file>
             Modify multiple files as required...
             <message phase="completed">Done! [User message to define what you did in which file, keep it short and to the point.] </message>
-
+            
+            ## TEMPLATE PRESERVATION (CRITICAL)
+            
+             This project is generated from an existing starter template.
+            
+             When modifying existing files:
+            
+             - Never remove BrowserRouter.
+             - Never remove QueryClientProvider.
+             - Never remove Toaster.
+             - Never remove ThemeProvider or other root providers.
+             - Preserve existing imports unless they are no longer used.
+             - Modify existing files instead of rewriting them from scratch.
+            
+             React Router Rules:
+             - Routes, Route, useRoutes, Link, NavLink, and useNavigate require a Router provider.
+             - If Routes is present, BrowserRouter must remain present.
+             - Never output Routes outside a Router provider.
+            
+             Dependency Rules:
+             - Every imported package must exist in package.json.
+             - Update package.json when introducing new dependencies.
+             
             ## 3. Design Standards
             - **Visuals**: Modern, clean, "Beautiful by Default", and should look like a production-grade project.
             - **Colors**: Semantic only (`btn-primary`, `bg-base-100`). NEVER hardcode colors (`bg-blue-500`).

@@ -27,28 +27,27 @@ public class FileStorageConsumer {
     @KafkaListener(topics = "file-storage-request-event" , groupId = "workspace-group")
     public void consumeFileEvent(FileStoreRequestEvent requestEvent){
 
-        // idempotency check
-        if(processedEventRepository.existsById(requestEvent.sagaId())){
-            log.info("Duplicate Saga detected: {}. Resending previous ACK.",requestEvent.sagaId());
-            sendResponse(requestEvent,true,null);
+        // Idempotency check
+        if (processedEventRepository.existsById(requestEvent.sagaId())) {
+            log.info("Duplicate Saga detected: {}. Resending previous ACK.", requestEvent.sagaId());
+            sendResponse(requestEvent, true, null);
             return;
         }
 
         try {
             log.info("Saving file: {}", requestEvent.filePath());
 
-            projectFileService.saveFile(
-                    requestEvent.projectId(),requestEvent.filePath(), requestEvent.content()
-            );
+            projectFileService.saveFile(requestEvent.projectId(), requestEvent.filePath(), requestEvent.content());
             processedEventRepository.save(new ProcessedEvent(
-                    requestEvent.sagaId(), LocalDateTime.now())
-            );
+                    requestEvent.sagaId(), LocalDateTime.now()
+            ));
 
-            sendResponse( requestEvent,true,null);
-        } catch (Exception e){
-            log.error("Error in saving file: {}",e.getMessage());
-            sendResponse(requestEvent,false,e.getMessage());
+            sendResponse(requestEvent, true, null);
+        } catch (Exception e) {
+            log.error("Error saving file: {}", e.getMessage());
+            sendResponse(requestEvent, false, e.getMessage());
         }
+
     }
 
     private void sendResponse(FileStoreRequestEvent req, boolean success, String error) {
@@ -58,7 +57,6 @@ public class FileStorageConsumer {
                 .success(success)
                 .errorMessage(error)
                 .build();
-
-        kafkaTemplate.send("file-store-responses",response);
+        kafkaTemplate.send("file-store-responses", response);
     }
 }
