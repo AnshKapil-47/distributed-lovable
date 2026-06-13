@@ -4,8 +4,6 @@
 
 ### AI-Powered Full Stack Development Platform
 
-Build, edit, and deploy applications using AI-powered code generation with a cloud-native microservices architecture.
-
 </div>
 
 ---
@@ -226,48 +224,6 @@ distributed-lovable/
 
 ---
 
-# 🚀 Deployment
-
-## Local Development
-
-```bash
-git clone <repository-url>
-
-cd distributed-lovable
-```
-
-Start services:
-
-```bash
-docker-compose up -d
-```
-
-Run frontend:
-
-```bash
-npm install
-npm run dev
-```
-
----
-
-## Kubernetes Deployment
-
-Apply Kubernetes manifests:
-
-```bash
-kubectl apply -f k8s/
-```
-
-Verify deployment:
-
-```bash
-kubectl get pods
-kubectl get svc
-```
-
----
-
 # 🔄 CI/CD Pipeline
 
 GitHub Actions automatically:
@@ -277,26 +233,6 @@ GitHub Actions automatically:
 - Create Docker images
 - Push images to Docker Hub
 - Deploy to Kubernetes
-
----
-
-# 📊 Screenshots
-
-### Login Page
-
-_Add screenshot here_
-
-### AI Chat Interface
-
-_Add screenshot here_
-
-### Project Workspace
-
-_Add screenshot here_
-
-### Kubernetes Deployment
-
-_Add screenshot here_
 
 ---
 
@@ -310,25 +246,7 @@ _Add screenshot here_
 
 ---
 
-# 📈 Future Enhancements
-
-- Real-time collaboration
-- Team workspaces
-- Git integration
-- AI code review
-- Usage analytics
-- Multi-model AI support
-
----
-
-# 👨‍💻 Author
-
-**Ansh Kapil**
-
-Full Stack Developer | Java Backend Developer | Cloud & DevOps Enthusiast
-
----
-
-# ⭐ Support
-
-If you like this project, give it a ⭐ on GitHub.
+# 💳 Stripe Payment Integration
+- Payment intent creation
+- Webhook handling
+- Secure key management via environment variables
