@@ -6,14 +6,6 @@
 
 Build, edit, and deploy applications using AI-powered code generation with a cloud-native microservices architecture.
 
-![Java](https://img.shields.io/badge/Java-21-orange)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-green)
-![React](https://img.shields.io/badge/React-19-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)
-![Docker](https://img.shields.io/badge/Docker-Ready-blue)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-326CE5)
-![License](https://img.shields.io/badge/License-MIT-brightgreen)
-
 </div>
 
 ---
@@ -73,7 +65,7 @@ The platform is built using a scalable microservices architecture running on Kub
 ### ☁️ Cloud Native
 
 - Kubernetes deployment
-- Horizontal scalability
+- Horizontal scalability - Kafka
 - Service discovery
 - Centralized configuration
 - Fault isolation
@@ -190,20 +182,15 @@ Handles:
 - Java 21
 - Spring Boot
 - Spring Security
+- Spring Ai
 - Spring Cloud Gateway
 - Spring Data JPA
 - Hibernate
 
-## Frontend
-
-- React
-- TypeScript
-- Vite
-- TailwindCSS
-
 ## Database
 
 - PostgreSQL
+- Redis
 
 ## AI
 
@@ -214,6 +201,7 @@ Handles:
 
 - Docker
 - Kubernetes
+- Kafka
 - GKE
 - GitHub Actions
 
