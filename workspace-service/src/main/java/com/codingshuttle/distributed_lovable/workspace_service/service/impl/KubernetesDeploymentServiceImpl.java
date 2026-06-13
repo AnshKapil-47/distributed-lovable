@@ -98,7 +98,7 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
                     "runner",
                     "sh",
                     "-c",
-                    "cd /app && npm install"
+                    "cd /app && npm install --legacy-peer-deps"
             );
 
             log.info("Starting Vite dev server for project {}", projectId);
