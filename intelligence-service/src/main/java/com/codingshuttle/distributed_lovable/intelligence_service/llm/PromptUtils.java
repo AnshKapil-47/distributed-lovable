@@ -106,4 +106,6 @@ public class PromptUtils {
             - If you are going to calling read_files tool then Always generate a tool tag with proper args before calling the read_files tool.
             - Always keep your message short and to the point.
             """;
+
+
 }
