@@ -203,36 +203,35 @@ Handles:
 - GKE
 - GitHub Actions
 
----
-
-# 📂 Project Structure
-
-```text
-distributed-lovable/
-
-├── account-service/
-├── api-gateway/
-├── config-service/
-├── intelligence-service/
-├── workspace-service/
-├── preview-runner/
-├── frontend/
-├── k8s/
-├── scripts/
-└── docs/
-```
 
 ---
 
 # 🔄 CI/CD Pipeline
 
-GitHub Actions automatically:
+GitHub Actions automatically performs:
 
-- Build applications
-- Run tests
-- Create Docker images
-- Push images to Docker Hub
-- Deploy to Kubernetes
+- Build Application
+- Run Tests
+- Create Docker Images
+- Push Images to Docker Hub
+- Deploy to Kubernetes Cluster
+
+ GitHub Push
+     │
+     ▼
+ GitHub Actions
+     │
+     ▼
+ Build & Test
+     │
+     ▼
+ Docker Image
+     │
+     ▼
+ Docker Hub
+     │
+     ▼
+ Kubernetes Deployment
 
 ---
 
