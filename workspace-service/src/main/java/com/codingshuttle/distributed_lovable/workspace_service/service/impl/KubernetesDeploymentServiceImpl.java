@@ -91,24 +91,8 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
             String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
             execCommand(podName, "syncer", "sh", "-c", watchCmd);
 
-            log.info("Installing dependencies for project {}", projectId);
-
-            execCommand(
-                    podName,
-                    "runner",
-                    "sh",
-                    "-c",
-                    "cd /app && npm install --legacy-peer-deps"
-            );
-
-            log.info("Starting Vite dev server for project {}", projectId);
-
-            execCommand(
-                    podName,
-                    "runner",
-                    "sh",
-                    "-c",
-                    "cd /app && nohup npm run dev -- --host 0.0.0.0 --port 5173 > /app/dev.log 2>&1 &");
+            String startCmd = "npm install && nohup npm run dev -- --host 0.0.0.0 --port 5173 > /app/dev.log 2>&1 &";
+            execCommand(podName, "runner", "sh", "-c", startCmd);
 
             Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();
             registerRoute(domain, updatedPod);
@@ -132,79 +116,29 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
     }
 
     private void execCommand(String podName, String container, String... command) {
-
-        log.info("Executing in {}:{} -> {}",
-                podName,
-                container,
-                String.join(" ", command));
+        log.debug("Exec in {}:{} -> {}", podName, container, String.join(" ", command));
 
         CompletableFuture<String> data = new CompletableFuture<>();
-
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-        try (ExecWatch ignored = client.pods()
-                .inNamespace(namespace)
-                .withName(podName)
+        try (ExecWatch ignored = client.pods().inNamespace(namespace).withName(podName)
                 .inContainer(container)
-                .writingOutput(stdout)
-                .writingError(stderr)
+                .writingOutput(new ByteArrayOutputStream())
+                .writingError(new ByteArrayOutputStream())
                 .usingListener(new ExecListener() {
-
                     @Override
                     public void onClose(int code, String reason) {
-
-                        log.info(
-                                "Exec finished in {}:{} -> exitCode={}, reason={}",
-                                podName,
-                                container,
-                                code,
-                                reason
-                        );
-
                         data.complete("Done");
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t, Response failureResponse) {
-                        log.error("Exec failed", t);
-                        data.completeExceptionally(t);
                     }
                 })
                 .exec(command)) {
 
-            // Background commands (nohup ... &)
             if (command[command.length - 1].trim().endsWith("&")) {
-
-                Thread.sleep(3000);
-
+                Thread.sleep(500);
             } else {
-
-                // npm install may take time
-                data.get(300, TimeUnit.SECONDS);
-            }
-
-            String out = stdout.toString();
-            String err = stderr.toString();
-
-            if (!out.isBlank()) {
-                log.info("STDOUT:\n{}", out);
-            }
-
-            if (!err.isBlank()) {
-                log.error("STDERR:\n{}", err);
+                data.get(30, TimeUnit.SECONDS);
             }
 
         } catch (Exception e) {
-
-            log.error(
-                    "Exec failed for pod={}, container={}, command={}",
-                    podName,
-                    container,
-                    String.join(" ", command),
-                    e
-            );
-
+            log.error("Exec failed", e);
             throw new RuntimeException("Pod Execution Failed", e);
         }
     }
