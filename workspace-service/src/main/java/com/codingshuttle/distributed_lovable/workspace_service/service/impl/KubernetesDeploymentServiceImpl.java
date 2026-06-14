@@ -95,9 +95,9 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
             // Step 3: Copy pre-cached node_modules, then npm install (only installs delta — very fast)
             // Then start Vite in background
             String startCmd =
-                    "cp -rn /app-cache/node_modules /app/node_modules 2>/dev/null || true && " +
-                            "nohup sh -c 'cd /app && npm install && npm run dev -- --host 0.0.0.0 --port 5173' " +
-                            "> /app/dev.log 2>&1 &";
+                    "cp -rn /node-cache/node_modules /app/node_modules 2>/dev/null || true && \" +\n" +
+                            "    \"nohup sh -c 'cd /app && npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0 --port 5173' \" +\n" +
+                            "    \"> /app/dev.log 2>&1 &";
             execCommand(true, podName, "runner", "sh", "-c", startCmd);
 
             // Step 4: Wait for Vite to actually be ready before registering route
