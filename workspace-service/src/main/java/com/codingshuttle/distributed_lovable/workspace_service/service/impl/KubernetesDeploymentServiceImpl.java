@@ -91,7 +91,7 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
             String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
             execCommand(podName, "syncer", "sh", "-c", watchCmd);
 
-            String startCmd = "npm install && nohup npm run dev -- --host 0.0.0.0 --port 5173 > /app/dev.log 2>&1 &";
+            String startCmd = "nohup sh -c 'npm install && npm run dev -- --host 0.0.0.0 --port 5173' > /app/dev.log 2>&1 &";
             execCommand(podName, "runner", "sh", "-c", startCmd);
 
             Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();

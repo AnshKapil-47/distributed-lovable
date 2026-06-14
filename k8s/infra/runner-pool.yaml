@@ -8,7 +8,6 @@ spec:
   selector:
     matchLabels:
       app: runner
-      status: idle
   template:
     metadata:
       labels:
