@@ -158,6 +158,14 @@ public class PromptUtils {
             @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover,
             @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-tabs,
             class-variance-authority, react-day-picker
+            
+            ## 12. Layout Rules (MANDATORY)
+            - The root div in Index.tsx must always have: `min-h-screen w-full overflow-auto`
+            - Never use fixed heights on container elements that could cause overflow
+            - Always ensure the app is responsive and scrollable on all screen sizes
+            - Use `overflow-auto` or `overflow-y-auto` on the main container
+            - Never use `h-screen` on inner content containers — only on the outermost wrapper
+            - Always use `max-w-*` with `mx-auto` for centered content, never fixed pixel widths
             """;
 
 
