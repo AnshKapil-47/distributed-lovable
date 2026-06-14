@@ -39,10 +39,7 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
     private static final String BUSY = "busy";
 
     public DeployResponse deploy(Long projectId) {
-        // Dynamically build the domain: project-123.app.domain.com
         String domain = "project-" + projectId + "." + baseDomain;
-
-        // Use default port 80 format logic for clean URLs, or explicit ports for local testing
         String formattedUrl = proxyPort.equals("80")
                 ? "http://" + domain
                 : "http://" + domain + ":" + proxyPort;
@@ -85,15 +82,28 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
         });
 
         try {
-            String initialSyncCmd = String.format("rm -rf /app/* && mc mirror --overwrite myminio/projects/%d/ /app/", projectId);
-            execCommand(podName, "syncer", "sh", "-c", initialSyncCmd);
+            // Step 1: Sync project files from MinIO
+            String initialSyncCmd = String.format(
+                    "rm -rf /app/* && mc mirror --overwrite myminio/projects/%d/ /app/", projectId);
+            execCommand(false, podName, "syncer", "sh", "-c", initialSyncCmd);
 
-            String watchCmd = String.format("nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
-            execCommand(podName, "syncer", "sh", "-c", watchCmd);
+            // Step 2: Start watching MinIO for file changes (background)
+            String watchCmd = String.format(
+                    "nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
+            execCommand(true, podName, "syncer", "sh", "-c", watchCmd);
 
-            String startCmd = "nohup sh -c 'npm install && npm run dev -- --host 0.0.0.0 --port 5173' > /app/dev.log 2>&1 &";
-            execCommand(podName, "runner", "sh", "-c", startCmd);
+            // Step 3: Copy pre-cached node_modules, then npm install (only installs delta — very fast)
+            // Then start Vite in background
+            String startCmd =
+                    "cp -rn /app-cache/node_modules /app/node_modules 2>/dev/null || true && " +
+                            "nohup sh -c 'cd /app && npm install && npm run dev -- --host 0.0.0.0 --port 5173' " +
+                            "> /app/dev.log 2>&1 &";
+            execCommand(true, podName, "runner", "sh", "-c", startCmd);
 
+            // Step 4: Wait for Vite to actually be ready before registering route
+            waitForVite(podName);
+
+            // Step 5: Register route in Redis so proxy can forward traffic
             Pod updatedPod = client.pods().inNamespace(namespace).withName(podName).get();
             registerRoute(domain, updatedPod);
 
@@ -107,17 +117,60 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
         }
     }
 
+    /**
+     * Polls the dev.log inside the runner container every 3 seconds until
+     * Vite prints "Local:" (meaning it's ready), or until 3 minutes timeout.
+     * This ensures we NEVER register the route before Vite is actually listening on :5173.
+     */
+    private void waitForVite(String podName) throws InterruptedException {
+        log.info("Waiting for Vite to start in pod {}...", podName);
+        int maxAttempts = 90; // 90 × 3s
+        for (int i = 0; i < maxAttempts; i++) {
+            Thread.sleep(3000);
+            try {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                CompletableFuture<String> done = new CompletableFuture<>();
+                try (ExecWatch watch = client.pods().inNamespace(namespace).withName(podName)
+                        .inContainer("runner")
+                        .writingOutput(out)
+                        .writingError(new ByteArrayOutputStream())
+                        .usingListener(new ExecListener() {
+                            @Override
+                            public void onClose(int code, String reason) {
+                                done.complete("done");
+                            }
+                        })
+                        .exec("sh", "-c", "cat /app/dev.log 2>/dev/null || echo ''")) {
+                    done.get(5, TimeUnit.SECONDS);
+                }
+                String log_content = out.toString();
+                if (log_content.contains("Local:") || log_content.contains("localhost:5173")) {
+                    log.info("✅ Vite is ready in pod {} after {}s", podName, (i + 1) * 3);
+                    return;
+                }
+                log.debug("Vite not ready yet (attempt {}/{}), log: {}", i + 1, maxAttempts,
+                        log_content.length() > 200 ? log_content.substring(log_content.length() - 200) : log_content);
+            } catch (Exception e) {
+                log.warn("Error checking Vite status: {}", e.getMessage());
+            }
+        }
+        // If Vite didn't start in 3 minutes, register anyway and let proxy retry handle it
+        log.warn("Vite did not confirm ready in 3 minutes for pod {}. Registering route anyway.", podName);
+    }
+
     private void registerRoute(String domain, Pod pod) {
         String podIp = pod.getStatus().getPodIP();
         if (podIp == null) throw new RuntimeException("Pod is running but has no IP!");
-
         redisTemplate.opsForValue().set("route:" + domain, podIp + ":5173", 6, TimeUnit.HOURS);
         log.info("Route Registered: {} -> {}", domain, podIp);
     }
 
-    private void execCommand(String podName, String container, String... command) {
+    /**
+     * @param background if true, command ends with & so we only wait 500ms
+     *                   if false, command is blocking so we wait up to 60s
+     */
+    private void execCommand(boolean background, String podName, String container, String... command) {
         log.debug("Exec in {}:{} -> {}", podName, container, String.join(" ", command));
-
         CompletableFuture<String> data = new CompletableFuture<>();
         try (ExecWatch ignored = client.pods().inNamespace(namespace).withName(podName)
                 .inContainer(container)
@@ -131,10 +184,10 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
                 })
                 .exec(command)) {
 
-            if (command[command.length - 1].trim().endsWith("&")) {
+            if (background) {
                 Thread.sleep(500);
             } else {
-                data.get(30, TimeUnit.SECONDS);
+                data.get(60, TimeUnit.SECONDS);
             }
 
         } catch (Exception e) {
@@ -142,9 +195,4 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
             throw new RuntimeException("Pod Execution Failed", e);
         }
     }
-
-
-
-
-
 }

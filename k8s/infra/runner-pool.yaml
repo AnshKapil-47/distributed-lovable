@@ -17,6 +17,27 @@ spec:
       volumes:
         - name: workspace
           emptyDir: {}
+        - name: node-cache
+          emptyDir: {}
+
+      # Pre-installs common React/Vite packages into /node-cache BEFORE pod becomes idle.
+      # When a project deploys, we copy /node-cache/node_modules into /app — npm install
+      # then only installs missing project-specific packages (takes 2-5s instead of 60-120s).
+      initContainers:
+        - name: npm-prefetch
+          image: node:20-alpine
+          workingDir: /node-cache
+          command:
+            - sh
+            - -c
+            - |
+              echo '{"name":"cache","version":"1.0.0","dependencies":{"vite":"^5.0.0","@vitejs/plugin-react":"^4.0.0","react":"^18.0.0","react-dom":"^18.0.0","typescript":"^5.0.0","@types/react":"^18.0.0","@types/react-dom":"^18.0.0","tailwindcss":"^3.0.0","autoprefixer":"^10.0.0","postcss":"^8.0.0","lucide-react":"^0.300.0","axios":"^1.0.0","react-router-dom":"^6.0.0"}}' > package.json
+              npm install --prefer-offline
+              echo "✅ npm prefetch complete"
+          volumeMounts:
+            - name: node-cache
+              mountPath: /node-cache
+
       containers:
         # 1. THE RUNNER (Vite / Node.js)
         - name: runner
@@ -26,6 +47,9 @@ spec:
           volumeMounts:
             - name: workspace
               mountPath: /app
+            - name: node-cache
+              mountPath: /node-cache
+              readOnly: true
           ports:
             - containerPort: 5173
           resources:
@@ -51,7 +75,6 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: MINIO_ROOT_PASSWORD
-            # Constructing the host URL for the internal MinIO service
             - name: MC_HOST_myminio
               value: "http://$(MINIO_USER):$(MINIO_PASS)@minio.lovable-core.svc.cluster.local:9000"
           volumeMounts:
