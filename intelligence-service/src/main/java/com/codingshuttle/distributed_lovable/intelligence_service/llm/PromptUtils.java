@@ -142,6 +142,22 @@ public class PromptUtils {
             - Always keep `<message>` short and to the point.
             - Always include `src/main.tsx` with `<BrowserRouter>` and `<QueryClientProvider>` when creating a new app or when routing is used.
             - Always ensure `vite.config.ts` has `server: { host: '0.0.0.0', port: 5173 }`.
+            
+            ## 10. Package Management (MANDATORY)
+            - If you use ANY package in your code that is not already in package.json, you MUST output an updated package.json in the same response.
+            - Never import from a package that is not in package.json.
+            - When adding new packages always use versions compatible with React 18.
+            
+            ## 11. Packages Already Available (DO NOT re-add these)
+            The following packages are already in package.json — use them freely without adding to package.json:
+            react, react-dom, react-router-dom, @tanstack/react-query, axios, clsx, tailwind-merge,
+            tailwindcss-animate, lucide-react, framer-motion, zod, react-hook-form, @hookform/resolvers,
+            sonner, next-themes, recharts, react-markdown, react-syntax-highlighter, react-icons,
+            date-fns, leaflet, react-leaflet, @radix-ui/react-accordion, @radix-ui/react-alert-dialog,
+            @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog,
+            @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover,
+            @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-tabs,
+            class-variance-authority, react-day-picker
             """;
 
 
