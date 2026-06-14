@@ -89,15 +89,18 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
 
             // Step 2: Start watching MinIO for file changes (background)
             String watchCmd = String.format(
-                    "nohup mc mirror --overwrite --watch myminio/projects/%d/ /app/ > /app/sync.log 2>&1 &", projectId);
+                    "sh -c 'mc mirror --overwrite --watch myminio/projects/%d/ /app/ >> /app/sync.log 2>&1 &'", projectId);
             execCommand(true, podName, "syncer", "sh", "-c", watchCmd);
 
             // Step 3: Copy pre-cached node_modules, then npm install (only installs delta — very fast)
             // Then start Vite in background
             String startCmd =
-                    "cp -rn /node-cache/node_modules /app/node_modules 2>/dev/null || true && \" +\n" +
-                            "    \"nohup sh -c 'cd /app && npm install --legacy-peer-deps && npm run dev -- --host 0.0.0.0 --port 5173' \" +\n" +
-                            "    \"> /app/dev.log 2>&1 &";
+                    "sh -c '" +
+                            "cp -rn /node-cache/node_modules /app/node_modules 2>/dev/null || true && " +
+                            "cd /app && " +
+                            "npm install --legacy-peer-deps >> /app/dev.log 2>&1 && " +
+                            "npm run dev -- --host 0.0.0.0 --port 5173 >> /app/dev.log 2>&1 &" +
+                            "'";
             execCommand(true, podName, "runner", "sh", "-c", startCmd);
 
             // Step 4: Wait for Vite to actually be ready before registering route
@@ -185,7 +188,7 @@ public class KubernetesDeploymentServiceImpl implements DeploymentService {
                 .exec(command)) {
 
             if (background) {
-                Thread.sleep(500);
+                Thread.sleep(1000);
             } else {
                 data.get(60, TimeUnit.SECONDS);
             }
