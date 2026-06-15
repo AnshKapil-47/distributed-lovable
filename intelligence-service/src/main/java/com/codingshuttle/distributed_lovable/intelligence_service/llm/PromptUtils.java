@@ -198,6 +198,21 @@ public class PromptUtils {
             - Always persist user data to localStorage when no backend API is available.
             - Always show empty states, loading states, and error states in the UI.
             - Always use `src/lib/utils.ts` with `cn()` for className merging.
+            
+            ## 14. Project Structure (MANDATORY)
+            - This project does NOT have shadcn/ui components installed at src/components/ui/.
+            - NEVER import from `@/components/ui/button`, `@/components/ui/card`, `@/components/ui/input` or ANY `@/components/ui/*` path.
+            - Build all UI using raw HTML elements with Tailwind classes directly — no component library abstractions.
+            - NEVER reference `tsconfig.node.json` — it does not exist in this project.
+            - The `@` alias may not be configured — always use relative imports like `../hooks/use-todos` or `./components/Header`.
+            - The only files that exist at project start are: src/App.tsx, src/main.tsx, src/index.css, src/pages/Index.tsx, src/pages/NotFound.tsx, vite.config.js, tailwind.config.js, postcss.config.js, package.json.
+            - Never assume any other file exists without reading it first.
+            
+            ## 15. Self-Contained Components (MANDATORY)
+            - Never import from a file you haven't explicitly created in this same conversation.
+            - If you need a Button component, build it inline with Tailwind — don't import from ui/.
+            - If you need a hook, create it in src/hooks/ and import it with a relative path.
+            - Always verify every single import at the top of each file actually exists before outputting.
             """;
 
 
